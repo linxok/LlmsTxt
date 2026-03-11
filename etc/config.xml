@@ -19,6 +19,11 @@
                 <manual_links></manual_links>
                 <optional_links></optional_links>
                 <cache_lifetime>3600</cache_lifetime>
+                <cron_enabled>1</cron_enabled>
+                <cron_frequency>daily</cron_frequency>
+                <cron_weekday>1</cron_weekday>
+                <cron_time>02:00</cron_time>
+                <cron_schedule>0 * * * *</cron_schedule>
             </general>
         </llmstxt>
     </default>

@@ -23,6 +23,11 @@ class Config
     private const XML_PATH_MANUAL_LINKS = 'llmstxt/general/manual_links';
     private const XML_PATH_OPTIONAL_LINKS = 'llmstxt/general/optional_links';
     private const XML_PATH_CACHE_LIFETIME = 'llmstxt/general/cache_lifetime';
+    private const XML_PATH_CRON_ENABLED = 'llmstxt/general/cron_enabled';
+    private const XML_PATH_CRON_FREQUENCY = 'llmstxt/general/cron_frequency';
+    private const XML_PATH_CRON_WEEKDAY = 'llmstxt/general/cron_weekday';
+    private const XML_PATH_CRON_TIME = 'llmstxt/general/cron_time';
+    private const XML_PATH_CRON_SCHEDULE = 'llmstxt/general/cron_schedule';
 
     private ScopeConfigInterface $scopeConfig;
     private StoreManagerInterface $storeManager;
@@ -118,6 +123,31 @@ class Config
     public function getCacheLifetime(?int $storeId = null): int
     {
         return max(0, (int) $this->getValue(self::XML_PATH_CACHE_LIFETIME, $storeId));
+    }
+
+    public function isCronEnabled(): bool
+    {
+        return $this->scopeConfig->isSetFlag(self::XML_PATH_CRON_ENABLED);
+    }
+
+    public function getCronFrequency(): string
+    {
+        return trim((string) $this->scopeConfig->getValue(self::XML_PATH_CRON_FREQUENCY)) ?: 'daily';
+    }
+
+    public function getCronWeekday(): int
+    {
+        return (int) $this->scopeConfig->getValue(self::XML_PATH_CRON_WEEKDAY);
+    }
+
+    public function getCronTime(): string
+    {
+        return trim((string) $this->scopeConfig->getValue(self::XML_PATH_CRON_TIME)) ?: '02:00';
+    }
+
+    public function getCronSchedule(): string
+    {
+        return trim((string) $this->scopeConfig->getValue(self::XML_PATH_CRON_SCHEDULE));
     }
 
     private function getValue(string $path, ?int $storeId = null): mixed

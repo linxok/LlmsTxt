@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+    <group id="default">
+        <job name="mycompany_llmstxt_generate_files" instance="MyCompany\LlmsTxt\Cron\GenerateFiles" method="execute">
+            <config_path>llmstxt/general/cron_schedule</config_path>
+        </job>
+    </group>
+</config>

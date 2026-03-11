@@ -75,9 +75,40 @@
                     <validate>required-entry validate-number validate-digits validate-zero-or-greater</validate>
                     <comment>Set 0 to disable llms.txt cache.</comment>
                 </field>
-                <field id="preview" translate="label" sortOrder="170" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Generated Preview</label>
-                    <frontend_model>MyCompany\LlmsTxt\Block\Adminhtml\System\Config\Form\Field\Preview</frontend_model>
+                <field id="cron_enabled" translate="label" type="select" sortOrder="162" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable Automatic File Generation</label>
+                    <backend_model>MyCompany\LlmsTxt\Model\Config\Backend\Cron</backend_model>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="cron_frequency" translate="label" type="select" sortOrder="163" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Generation Frequency</label>
+                    <source_model>MyCompany\LlmsTxt\Model\Config\Source\Frequency</source_model>
+                    <depends>
+                        <field id="cron_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="cron_weekday" translate="label" type="select" sortOrder="164" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Day of Week</label>
+                    <source_model>MyCompany\LlmsTxt\Model\Config\Source\Weekday</source_model>
+                    <depends>
+                        <field id="cron_enabled">1</field>
+                        <field id="cron_frequency">weekly</field>
+                    </depends>
+                </field>
+                <field id="cron_time" translate="label" type="select" sortOrder="165" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Generation Time</label>
+                    <source_model>MyCompany\LlmsTxt\Model\Config\Source\TimeOptions</source_model>
+                    <depends>
+                        <field id="cron_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="file_status" translate="label" sortOrder="170" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Generated File Status</label>
+                    <frontend_model>MyCompany\LlmsTxt\Block\Adminhtml\System\Config\Form\Field\FileStatus</frontend_model>
+                </field>
+                <field id="regenerate" translate="label" sortOrder="175" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Regenerate Files</label>
+                    <frontend_model>MyCompany\LlmsTxt\Block\Adminhtml\System\Config\Form\Field\RegenerateButton</frontend_model>
                 </field>
             </group>
         </section>

@@ -5,25 +5,29 @@ use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\Raw;
 use Magento\Framework\Controller\Result\RawFactory;
+use Magento\Store\Model\StoreManagerInterface;
 use MyCompany\LlmsTxt\Model\Config;
-use MyCompany\LlmsTxt\Model\LlmsTxtGenerator;
+use MyCompany\LlmsTxt\Model\LlmsTxtFileManager;
 
 class Index extends Action
 {
     private RawFactory $resultRawFactory;
-    private LlmsTxtGenerator $generator;
+    private LlmsTxtFileManager $fileManager;
     private Config $config;
+    private StoreManagerInterface $storeManager;
 
     public function __construct(
         Context $context,
         RawFactory $resultRawFactory,
-        LlmsTxtGenerator $generator,
-        Config $config
+        LlmsTxtFileManager $fileManager,
+        Config $config,
+        StoreManagerInterface $storeManager
     ) {
         parent::__construct($context);
         $this->resultRawFactory = $resultRawFactory;
-        $this->generator = $generator;
+        $this->fileManager = $fileManager;
         $this->config = $config;
+        $this->storeManager = $storeManager;
     }
 
     public function execute(): Raw
@@ -37,7 +41,15 @@ class Index extends Action
             return $result;
         }
 
-        $result->setContents($this->generator->generate());
+        $host = strtolower((string) parse_url((string) $this->storeManager->getStore()->getBaseUrl(), PHP_URL_HOST));
+        $content = $this->fileManager->read($this->fileManager->buildIdentifier($host));
+        if ($content === null) {
+            $this->getResponse()->setHttpResponseCode(503);
+            $result->setContents('llms.txt is not generated yet');
+            return $result;
+        }
+
+        $result->setContents($content);
         return $result;
     }
 }
