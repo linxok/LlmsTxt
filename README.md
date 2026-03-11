@@ -6,10 +6,13 @@ Magento 2 module that generates and serves `llms.txt` at the exact URL `/llms.tx
 
 - Per-store configuration
 - Exact `/llms.txt` route
+- Physical file generation in `var/mycompany/llmstxt/`
 - Manual priority links and optional links
 - Automatic CMS page, category, and product inclusion
 - Curated CMS/category/product selection
-- Admin preview of generated output
+- Admin file status display
+- Manual regenerate action from admin
+- Automatic regeneration via cron
 - Cache lifetime configuration
 - Mixed mode support for:
   - separate domains per store
@@ -73,7 +76,12 @@ Main settings:
 - Manual Priority Links
 - Optional Links
 - Cache Lifetime (seconds)
-- Generated Preview
+- Enable Automatic File Generation
+- Generation Frequency
+- Day of Week
+- Generation Time
+- Generated File Status
+- Regenerate Files
 
 ## Manual Link Format
 
@@ -87,7 +95,9 @@ Description is optional.
 
 ## Notes
 
-- The module does not create a physical file on disk.
-- `llms.txt` is generated dynamically and served as `text/plain; charset=UTF-8`.
+- The module creates physical files in `var/mycompany/llmstxt/`.
+- `/llms.txt` serves the already generated file content as `text/plain; charset=UTF-8`.
+- Files can be regenerated manually from admin or automatically by cron.
+- Cron schedule is configured from admin using frequency, weekday, and time fields.
 - For a host with language prefixes like `/uk/` and `/en/`, use one aggregated `/llms.txt` at the host root.
 - For separate domains, each domain serves its own store-specific `llms.txt`.
