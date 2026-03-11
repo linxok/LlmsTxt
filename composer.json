@@ -1,0 +1,27 @@
+{
+    "name": "mycompany/module-llms-txt",
+    "description": "Magento 2 module that serves /llms.txt with per-store and mixed domain/language-prefix support.",
+    "type": "magento2-module",
+    "version": "1.1.0",
+    "license": [
+        "proprietary"
+    ],
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "MyCompany\\LlmsTxt\\": ""
+        }
+    },
+    "require": {
+        "php": ">=8.1",
+        "magento/framework": "*",
+        "magento/module-store": "*",
+        "magento/module-config": "*",
+        "magento/module-backend": "*",
+        "magento/module-catalog": "*",
+        "magento/module-cms": "*",
+        "magento/module-url-rewrite": "*"
+    }
+}

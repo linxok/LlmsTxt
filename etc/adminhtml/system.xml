@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system.xsd">
+    <system>
+        <tab id="mycompany" translate="label" sortOrder="300">
+            <label>MyCompany</label>
+        </tab>
+        <section id="llmstxt" translate="label" type="text" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>LLMS.txt</label>
+            <tab>mycompany</tab>
+            <resource>MyCompany_LlmsTxt::config</resource>
+            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General Settings</label>
+                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable LLMS.txt</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="site_title" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Site Title</label>
+                    <comment>Leave empty to use the current store name.</comment>
+                </field>
+                <field id="summary" translate="label" type="textarea" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Short Summary</label>
+                    <comment>Short factual summary shown in the blockquote under the H1.</comment>
+                </field>
+                <field id="intro" translate="label" type="textarea" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Intro Text</label>
+                    <comment>One or more paragraphs that explain the store, assortment, service, geography, or key context for AI systems.</comment>
+                </field>
+                <field id="include_categories" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Include Categories Automatically</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="include_products" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Include Products Automatically</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="include_cms_pages" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Include CMS Pages Automatically</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="max_categories" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Maximum Categories</label>
+                    <validate>required-entry validate-number validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="max_products" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Maximum Products</label>
+                    <validate>required-entry validate-number validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="max_cms_pages" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Maximum CMS Pages</label>
+                    <validate>required-entry validate-number validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="featured_category_ids" translate="label" type="textarea" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Featured Category IDs</label>
+                    <comment>Comma-separated category IDs to prioritize before automatic selection.</comment>
+                </field>
+                <field id="featured_product_skus" translate="label" type="textarea" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Featured Product SKUs</label>
+                    <comment>Comma-separated product SKUs to prioritize before automatic selection.</comment>
+                </field>
+                <field id="featured_cms_page_identifiers" translate="label" type="textarea" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Featured CMS Page Identifiers</label>
+                    <comment>Comma-separated CMS page identifiers to prioritize before automatic selection.</comment>
+                </field>
+                <field id="manual_links" translate="label" type="textarea" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Manual Priority Links</label>
+                    <comment>One entry per line in the format: Label|URL|Description. Description is optional.</comment>
+                </field>
+                <field id="optional_links" translate="label" type="textarea" sortOrder="150" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Optional Links</label>
+                    <comment>One entry per line in the format: Label|URL|Description. These links will be placed in the Optional section.</comment>
+                </field>
+                <field id="cache_lifetime" translate="label" type="text" sortOrder="160" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Cache Lifetime (seconds)</label>
+                    <validate>required-entry validate-number validate-digits validate-zero-or-greater</validate>
+                    <comment>Set 0 to disable llms.txt cache.</comment>
+                </field>
+                <field id="preview" translate="label" sortOrder="170" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Generated Preview</label>
+                    <frontend_model>MyCompany\LlmsTxt\Block\Adminhtml\System\Config\Form\Field\Preview</frontend_model>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

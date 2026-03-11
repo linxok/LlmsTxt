@@ -1,0 +1,13 @@
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+vendor/
+composer.lock
+var/
+generated/
+pub/static/
+pub/media/
+node_modules/
+*.log
+*.cache

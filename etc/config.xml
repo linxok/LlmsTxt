@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <llmstxt>
+            <general>
+                <enabled>1</enabled>
+                <site_title></site_title>
+                <summary></summary>
+                <intro></intro>
+                <include_categories>1</include_categories>
+                <include_products>1</include_products>
+                <include_cms_pages>1</include_cms_pages>
+                <max_categories>10</max_categories>
+                <max_products>10</max_products>
+                <max_cms_pages>10</max_cms_pages>
+                <featured_category_ids></featured_category_ids>
+                <featured_product_skus></featured_product_skus>
+                <featured_cms_page_identifiers></featured_cms_page_identifiers>
+                <manual_links></manual_links>
+                <optional_links></optional_links>
+                <cache_lifetime>3600</cache_lifetime>
+            </general>
+        </llmstxt>
+    </default>
+</config>
