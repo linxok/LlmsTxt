@@ -43,12 +43,12 @@ class LlmsTxtGenerator
     {
         $store = $this->storeManager->getStore();
         $storeId = (int) $store->getId();
-        $relatedStores = $this->getRelatedStoresForCurrentHost($storeId);
-        $aggregateMode = count($relatedStores) > 1;
+        $relatedStores = $this->getDomainStores($storeId);
         $cacheLifetime = $this->config->getCacheLifetime($storeId);
-        $cacheKey = self::CACHE_KEY_PREFIX . ($aggregateMode
-            ? 'HOST_' . md5(implode('|', array_map(static fn (StoreInterface $relatedStore): string => (string) $relatedStore->getId(), $relatedStores)))
-            : 'STORE_' . $storeId);
+        $cacheKey = self::CACHE_KEY_PREFIX . 'DOMAIN_' . md5(implode('|', array_map(
+            static fn (StoreInterface $relatedStore): string => (string) $relatedStore->getId(),
+            $relatedStores
+        )));
 
         if ($cacheLifetime > 0) {
             $cachedValue = $this->cache->load($cacheKey);
@@ -57,9 +57,7 @@ class LlmsTxtGenerator
             }
         }
 
-        $result = $aggregateMode
-            ? $this->generateAggregated($storeId, $relatedStores)
-            : $this->generateForStore($storeId);
+        $result = $this->withCurrentStore($storeId, fn (): string => $this->generateForDomain($storeId, $relatedStores));
 
         if ($cacheLifetime > 0) {
             $this->cache->save($result, $cacheKey, ['MYCOMPANY_LLMSTXT'], $cacheLifetime);
@@ -68,13 +66,12 @@ class LlmsTxtGenerator
         return $result;
     }
 
-    private function generateForStore(int $storeId): string
+    private function generateForDomain(int $primaryStoreId, array $domainStores): string
     {
-        return implode("\n", $this->buildStoreLines($storeId)) . "\n";
-    }
+        if (count($domainStores) === 1) {
+            return implode("\n", $this->buildStoreLines($primaryStoreId)) . "\n";
+        }
 
-    private function generateAggregated(int $primaryStoreId, array $relatedStores): string
-    {
         $lines = [];
         $lines[] = '# ' . $this->escapeText($this->config->getSiteTitle($primaryStoreId));
 
@@ -97,25 +94,19 @@ class LlmsTxtGenerator
 
         $lines[] = '';
         $lines[] = '## Language Versions';
-        foreach ($relatedStores as $relatedStore) {
-            $lines[] = $this->formatLink([
-                'label' => (string) $relatedStore->getName(),
-                'url' => (string) $relatedStore->getBaseUrl(),
-                'description' => '',
-            ]);
+        foreach ($domainStores as $domainStore) {
+            $lines[] = $this->formatLink($this->buildLanguageVersionLink($domainStore));
         }
 
-        foreach ($relatedStores as $relatedStore) {
-            $storeId = (int) $relatedStore->getId();
+        foreach ($domainStores as $domainStore) {
+            $storeId = (int) $domainStore->getId();
             $storeLines = $this->buildStoreLines($storeId, true);
             if ($storeLines === []) {
                 continue;
             }
 
             $lines[] = '';
-            foreach ($storeLines as $storeLine) {
-                $lines[] = $storeLine;
-            }
+            $lines = array_merge($lines, $storeLines);
         }
 
         return implode("\n", $lines) . "\n";
@@ -123,87 +114,89 @@ class LlmsTxtGenerator
 
     private function buildStoreLines(int $storeId, bool $nested = false): array
     {
-        $headingPrefix = $nested ? '### ' : '## ';
-        $lines = [];
+        return $this->withCurrentStore($storeId, function () use ($storeId, $nested): array {
+            $headingPrefix = $nested ? '### ' : '## ';
+            $lines = [];
 
-        if ($nested) {
-            $lines[] = '## ' . $this->escapeText($this->storeManager->getStore($storeId)->getName());
-        } else {
-            $lines[] = '# ' . $this->escapeText($this->config->getSiteTitle($storeId));
+            if ($nested) {
+                $lines[] = '## ' . $this->escapeText($this->getStoreLanguageLabel($storeId));
+            } else {
+                $lines[] = '# ' . $this->escapeText($this->config->getSiteTitle($storeId));
 
-            $summary = $this->config->getSummary($storeId);
-            if ($summary !== '') {
-                $lines[] = '> ' . $this->escapeText($summary);
-            }
+                $summary = $this->config->getSummary($storeId);
+                if ($summary !== '') {
+                    $lines[] = '> ' . $this->escapeText($summary);
+                }
 
-            $intro = $this->config->getIntro($storeId);
-            if ($intro !== '') {
-                $lines[] = '';
-                foreach ($this->splitParagraphs($intro) as $paragraph) {
-                    $lines[] = $this->escapeText($paragraph);
+                $intro = $this->config->getIntro($storeId);
+                if ($intro !== '') {
                     $lines[] = '';
-                }
-                if (end($lines) === '') {
-                    array_pop($lines);
+                    foreach ($this->splitParagraphs($intro) as $paragraph) {
+                        $lines[] = $this->escapeText($paragraph);
+                        $lines[] = '';
+                    }
+                    if (end($lines) === '') {
+                        array_pop($lines);
+                    }
                 }
             }
-        }
 
-        $manualLinks = $this->config->getManualLinks($storeId);
-        if ($manualLinks !== []) {
-            $lines[] = '';
-            $lines[] = $headingPrefix . 'Key Pages';
-            foreach ($manualLinks as $link) {
-                $lines[] = $this->formatLink($link);
-            }
-        }
-
-        if ($this->config->shouldIncludeCmsPages($storeId)) {
-            $cmsLinks = $this->getCmsLinks($storeId, $this->config->getMaxCmsPages($storeId), $this->config->getFeaturedCmsPageIdentifiers($storeId));
-            if ($cmsLinks !== []) {
+            $manualLinks = $this->config->getManualLinks($storeId);
+            if ($manualLinks !== []) {
                 $lines[] = '';
-                $lines[] = $headingPrefix . 'Shopping Information';
-                foreach ($cmsLinks as $link) {
+                $lines[] = $headingPrefix . 'Key Pages';
+                foreach ($manualLinks as $link) {
                     $lines[] = $this->formatLink($link);
                 }
             }
-        }
 
-        if ($this->config->shouldIncludeCategories($storeId)) {
-            $categoryLinks = $this->getCategoryLinks($storeId, $this->config->getMaxCategories($storeId), $this->config->getFeaturedCategoryIds($storeId));
-            if ($categoryLinks !== []) {
+            if ($this->config->shouldIncludeCmsPages($storeId)) {
+                $cmsLinks = $this->getCmsLinks($storeId, $this->config->getMaxCmsPages($storeId), $this->config->getFeaturedCmsPageIdentifiers($storeId));
+                if ($cmsLinks !== []) {
+                    $lines[] = '';
+                    $lines[] = $headingPrefix . 'Shopping Information';
+                    foreach ($cmsLinks as $link) {
+                        $lines[] = $this->formatLink($link);
+                    }
+                }
+            }
+
+            if ($this->config->shouldIncludeCategories($storeId)) {
+                $categoryLinks = $this->getCategoryLinks($storeId, $this->config->getMaxCategories($storeId), $this->config->getFeaturedCategoryIds($storeId));
+                if ($categoryLinks !== []) {
+                    $lines[] = '';
+                    $lines[] = $headingPrefix . 'Main Categories';
+                    foreach ($categoryLinks as $link) {
+                        $lines[] = $this->formatLink($link);
+                    }
+                }
+            }
+
+            if ($this->config->shouldIncludeProducts($storeId)) {
+                $productLinks = $this->getProductLinks($storeId, $this->config->getMaxProducts($storeId), $this->config->getFeaturedProductSkus($storeId));
+                if ($productLinks !== []) {
+                    $lines[] = '';
+                    $lines[] = $headingPrefix . 'Featured Products';
+                    foreach ($productLinks as $link) {
+                        $lines[] = $this->formatLink($link);
+                    }
+                }
+            }
+
+            $optionalLinks = $this->config->getOptionalLinks($storeId);
+            if ($optionalLinks !== []) {
                 $lines[] = '';
-                $lines[] = $headingPrefix . 'Main Categories';
-                foreach ($categoryLinks as $link) {
+                $lines[] = $headingPrefix . 'Optional';
+                foreach ($optionalLinks as $link) {
                     $lines[] = $this->formatLink($link);
                 }
             }
-        }
 
-        if ($this->config->shouldIncludeProducts($storeId)) {
-            $productLinks = $this->getProductLinks($storeId, $this->config->getMaxProducts($storeId), $this->config->getFeaturedProductSkus($storeId));
-            if ($productLinks !== []) {
-                $lines[] = '';
-                $lines[] = $headingPrefix . 'Featured Products';
-                foreach ($productLinks as $link) {
-                    $lines[] = $this->formatLink($link);
-                }
-            }
-        }
-
-        $optionalLinks = $this->config->getOptionalLinks($storeId);
-        if ($optionalLinks !== []) {
-            $lines[] = '';
-            $lines[] = $headingPrefix . 'Optional';
-            foreach ($optionalLinks as $link) {
-                $lines[] = $this->formatLink($link);
-            }
-        }
-
-        return $lines;
+            return $lines;
+        });
     }
 
-    private function getRelatedStoresForCurrentHost(int $currentStoreId): array
+    private function getDomainStores(int $currentStoreId): array
     {
         $currentStore = $this->storeManager->getStore($currentStoreId);
         $currentHost = $this->extractHost((string) $currentStore->getBaseUrl());
@@ -228,6 +221,42 @@ class LlmsTxtGenerator
         usort($relatedStores, static fn (StoreInterface $left, StoreInterface $right): int => strcmp((string) $left->getCode(), (string) $right->getCode()));
 
         return $relatedStores !== [] ? $relatedStores : [$currentStore];
+    }
+
+    private function buildLanguageVersionLink(StoreInterface $store): array
+    {
+        $storeId = (int) $store->getId();
+
+        return [
+            'label' => $this->getStoreLanguageLabel($storeId),
+            'url' => (string) $store->getBaseUrl(),
+            'description' => (string) $store->getCode(),
+        ];
+    }
+
+    private function getStoreLanguageLabel(int $storeId): string
+    {
+        $store = $this->storeManager->getStore($storeId);
+        $localeCode = $this->config->getLocaleCode($storeId);
+        if ($localeCode === '') {
+            return (string) $store->getName();
+        }
+
+        $normalizedLocale = str_replace('-', '_', $localeCode);
+        $languageCode = strtolower((string) strtok($normalizedLocale, '_'));
+        $territoryCode = strtoupper((string) substr(strrchr($normalizedLocale, '_') ?: '', 1));
+        $label = strtoupper($languageCode);
+
+        if ($territoryCode !== '') {
+            $label .= ' (' . $territoryCode . ')';
+        }
+
+        $storeName = trim((string) $store->getName());
+        if ($storeName !== '' && strcasecmp($storeName, $label) !== 0) {
+            return $storeName . ' [' . $label . ']';
+        }
+
+        return $label;
     }
 
     private function extractHost(string $url): string
@@ -462,5 +491,17 @@ class LlmsTxtGenerator
     private function escapeUrl(string $value): string
     {
         return str_replace([' ', ')', '('], ['%20', '%29', '%28'], trim($value));
+    }
+
+    private function withCurrentStore(int $storeId, callable $callback): mixed
+    {
+        $previousStoreId = (int) $this->storeManager->getStore()->getId();
+        $this->storeManager->setCurrentStore($storeId);
+
+        try {
+            return $callback();
+        } finally {
+            $this->storeManager->setCurrentStore($previousStoreId);
+        }
     }
 }

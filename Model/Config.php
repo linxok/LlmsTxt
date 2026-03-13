@@ -8,6 +8,7 @@ use Magento\Store\Model\StoreManagerInterface;
 class Config
 {
     private const XML_PATH_ENABLED = 'llmstxt/general/enabled';
+    private const XML_PATH_LOCALE_CODE = 'general/locale/code';
     private const XML_PATH_SITE_TITLE = 'llmstxt/general/site_title';
     private const XML_PATH_SUMMARY = 'llmstxt/general/summary';
     private const XML_PATH_INTRO = 'llmstxt/general/intro';
@@ -53,6 +54,11 @@ class Config
         }
 
         return (string) $this->storeManager->getStore($storeId)->getName();
+    }
+
+    public function getLocaleCode(?int $storeId = null): string
+    {
+        return trim((string) $this->getValue(self::XML_PATH_LOCALE_CODE, $storeId));
     }
 
     public function getSummary(?int $storeId = null): string

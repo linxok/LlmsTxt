@@ -14,16 +14,19 @@ Magento 2 module that generates and serves `llms.txt` at the exact URL `/llms.tx
 - Manual regenerate action from admin
 - Automatic regeneration via cron
 - Cache lifetime configuration
-- Mixed mode support for:
-  - separate domains per store
-  - multiple language stores under one host with URL prefixes
+- Per-domain file generation
+- Multi-language domain aggregation
+- Language labels based on store locale
 
-## Mixed Mode Behavior
+## Domain and Language Behavior
 
-- If the current host belongs to a single enabled store, `/llms.txt` is generated for that store only.
-- If multiple enabled stores share the same host, `/llms.txt` becomes aggregated and includes:
-  - a `Language Versions` section
-  - nested sections for each related store view on that host
+- Stores are grouped by the host from their `base_url`.
+- Each host gets its own generated file in `var/mycompany/llmstxt/`.
+- If a host has one enabled store view, the file contains only that store view content.
+- If a host has multiple enabled store views, the file is generated once for the domain and includes:
+  - a `Language Versions` section with one entry per language/store view
+  - nested sections for each related store view on that domain
+- Language labels are derived from the store locale and fall back to the store name if locale is unavailable.
 
 ## Installation
 
@@ -99,5 +102,5 @@ Description is optional.
 - `/llms.txt` serves the already generated file content as `text/plain; charset=UTF-8`.
 - Files can be regenerated manually from admin or automatically by cron.
 - Cron schedule is configured from admin using frequency, weekday, and time fields.
-- For a host with language prefixes like `/uk/` and `/en/`, use one aggregated `/llms.txt` at the host root.
-- For separate domains, each domain serves its own store-specific `llms.txt`.
+- For a host with language prefixes like `/uk/` and `/en/`, one domain-level `/llms.txt` is generated and includes both languages.
+- For separate domains, each domain serves its own generated file.
